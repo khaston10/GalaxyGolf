@@ -7,6 +7,7 @@ public class GlobalControl : MonoBehaviour
     public static GlobalControl Instance;
     public int ballNumber;
     public int totalNumberOfStrokes;
+    public int currentHole;
 
     void Awake()
     {

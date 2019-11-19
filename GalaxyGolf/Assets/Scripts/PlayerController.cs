@@ -16,20 +16,25 @@ public class PlayerController : MonoBehaviour
     public Rigidbody rb;
     public Transform blackHole;
     public Text strokeNumberText;
+    public Text totalStrokeNumberText;
     public Text powerOfShotText;
+    public Slider powerSlider;
 
     public float mouseSensitivity = 10;
     public float powerOFShot;
     public int strokeNum = 1;
     public int ballNumber;
     public int totalNumberOfStrokes;
-    public int holeNumber = 1;
+    public int currentHole;
+    public int powerMeterSpeed = 10000;
 
 
     bool mouse1Down;
     bool mouse2Down;
     bool mouse3Down;
     public bool strokeInProgress = false;
+    public bool strokeStarted = false;
+
 
 
     // Start is called before the first frame update
@@ -37,6 +42,10 @@ public class PlayerController : MonoBehaviour
     {
         ballNumber = GlobalControl.Instance.ballNumber;
         totalNumberOfStrokes = GlobalControl.Instance.totalNumberOfStrokes;
+        currentHole = GlobalControl.Instance.currentHole;
+
+        totalStrokeNumberText.text = totalNumberOfStrokes.ToString();
+
 
         if (ballNumber == 1)
         {
@@ -154,17 +163,27 @@ public class PlayerController : MonoBehaviour
         // Rotates camera around ball using player's mouse inputs.
         float rotateHorizontal = Input.GetAxis("Mouse X");
         float rotateVertical = Input.GetAxis("Mouse Y");
-        if (mouse3Down) cam.transform.RotateAround(transform.position, Vector3.up, rotateHorizontal * mouseSensitivity);
-        if (mouse2Down) cam.transform.RotateAround(transform.position, -cam.transform.right, rotateVertical * mouseSensitivity);
+        if (mouse3Down && strokeInProgress == false) cam.transform.RotateAround(transform.position, Vector3.up, rotateHorizontal * mouseSensitivity);
+        if (mouse2Down && strokeInProgress == false) cam.transform.RotateAround(transform.position, -cam.transform.right, rotateVertical * mouseSensitivity);
     }
 
     public void Shoot()
     {
-        // Launches ball when player shoots.
+        // Starts power meter when player starts shot.
         if (mouse1Down && strokeInProgress == false)
         {
+            if (powerOFShot < 10) powerOFShot += Time.deltaTime * powerMeterSpeed;
+            else powerOFShot = 0;
+            strokeStarted = true;
+            powerSlider.value = powerOFShot;
+        }
+
+        // Launches ball when player shoots.
+        if (mouse1Down == false && strokeInProgress == false && strokeStarted)
+        {
+            strokeStarted = false;
             strokeInProgress = true;
-            rb.AddForce(cam.transform.forward * powerOFShot * 100, ForceMode.Impulse);
+            rb.AddForce(cam.transform.forward * powerOFShot * 300, ForceMode.Impulse);
         }
 
         // Check to see if stroke has been complete and update bool so that the next stroke can be made.
@@ -175,18 +194,24 @@ public class PlayerController : MonoBehaviour
             Vector3 pos = new Vector3(transform.position.x - (cam.transform.forward.x * 5), transform.position.y - (cam.transform.forward.y * 5), transform.position.z - (cam.transform.forward.z * 5));
             cam.transform.position = pos;
 
+            // Update power meter for new shot.
+            powerOFShot = 0;
+            powerSlider.value = powerOFShot;
+
             // Update the text object on screen.
             strokeNum += 1;
             strokeNumberText.text = strokeNum.ToString();
+            totalNumberOfStrokes += 1;
+            totalStrokeNumberText.text = totalNumberOfStrokes.ToString();
 
             // Check to see if ball is in hole. If it is, we will end the hole.
             if (blackHole.GetComponent<BlackHole>().ballInHole)
             {
                 Debug.Log("Hole is Over");
-                totalNumberOfStrokes += strokeNum;
+                currentHole += 1;
                 SaveData();
-                holeNumber += 1;
-                SceneManager.LoadScene(holeNumber, LoadSceneMode.Single);
+                if (currentHole == 10) SceneManager.LoadScene(11, LoadSceneMode.Single);
+                else SceneManager.LoadScene(10, LoadSceneMode.Single);
             }
         }
 
@@ -197,6 +222,7 @@ public class PlayerController : MonoBehaviour
     {
         GlobalControl.Instance.ballNumber = ballNumber;
         GlobalControl.Instance.totalNumberOfStrokes = totalNumberOfStrokes;
+        GlobalControl.Instance.currentHole = currentHole;
     }
 }
 
