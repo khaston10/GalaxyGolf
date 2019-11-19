@@ -16,7 +16,7 @@ With UnityEngine add the folder "GalaxyGolf" as a project.
 
 ## Authors
 
-* **Kevin Haston** - *Initial work* - [GitHub](https://github.com/KevinHaston)
+* **Kevin Haston** - *Initial work* - [GitHub](https://github.com/khaston10)
 
 ## Acknowledgments
 
